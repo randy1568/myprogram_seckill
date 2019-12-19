@@ -2,38 +2,45 @@ package com.hnu.redis;
 
 import com.alibaba.fastjson.JSON;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.JedisPoolConfig;
+
+import java.util.concurrent.Executors;
 
 @Service
 public class RedisService {
     @Autowired
     JedisPool jp;
 
-
-    public  <T> T get(String key,Class<T> tClass){
+    public <T> T get(KeyPrefix prefix, String key, Class<T> tClass) {
         Jedis jedis = null;
         try {
-            jedis  = jp.getResource();
-            String str = jedis.get(key);
-            T t = stringToBean(key,tClass);
+            jedis = jp.getResource();
+            String real_key = prefix.getPrefix()+key;
+            String str = jedis.get(real_key);
+            T t = stringToBean(str, tClass);
             return t;
         } finally {
             returnToPool(jedis);
         }
     }
-    public <T> boolean set(String key,T value){
+
+    public <T> boolean set(KeyPrefix prefix, String key, T value) {
         Jedis jedis = null;
         try {
-            jedis  = jp.getResource();
+            jedis = jp.getResource();
             String str_value = beanToString(value);
-            if(key == null){
+            if (key == null) {
                 return false;
             }
-            jedis.set(key,str_value);
+            String real_key = prefix.getPrefix()+key;
+            if(prefix.expireSeconds() <=0){
+                //永不过期
+                jedis.set(real_key, str_value);
+            }else {
+                jedis.setex(real_key,prefix.expireSeconds(),str_value);
+            }
             return true;
 
         } finally {
@@ -41,41 +48,92 @@ public class RedisService {
         }
     }
 
+    /**
+     * 判断key是否存在
+     * @param keyPrefix
+     * @param key
+     * @return
+     */
+    public boolean exists(KeyPrefix keyPrefix,String key){
+        Jedis jedis = null;
+        try {
+            jedis = jp.getResource();
+            String real_key = keyPrefix.getPrefix()+key;
+            return jedis.exists(real_key);
+        } finally {
+            jedis.close();
+        }
+    }
+
+    /**
+     * 增加键值
+     * @param keyPrefix
+     * @param key
+     * @return
+     */
+    public Long incr(KeyPrefix keyPrefix,String key){
+        Jedis jedis = null;
+        try {
+            jedis = jp.getResource();
+            String real_key = keyPrefix +key;
+             return jedis.incr(real_key);
+        } finally {
+            jedis.close();
+        }
+    }
+
+    /**
+     * 删除键值
+     * @param keyPrefix
+     * @param key
+     * @return
+     */
+    public Long decr(KeyPrefix keyPrefix,String key){
+        Jedis jedis = null;
+        try {
+            jedis = jp.getResource();
+            String real_key = keyPrefix +key;
+            return jedis.decr(real_key);
+        } finally {
+            jedis.close();
+        }
+    }
+
     private <T> String beanToString(T value) {
-        if(value == null){
+        if (value == null) {
             return null;
         }
         Class<?> clazz = value.getClass();
-        if(clazz == int.class || clazz == Integer.class){
-            return ""+value;
-        }else if(clazz == String.class){
-            return (String)value;
-        }else if(clazz == Long.class || clazz == long.class){
-            return ""+value;
-        }else {
+        if (clazz == int.class || clazz == Integer.class) {
+            return "" + value;
+        } else if (clazz == String.class) {
+            return (String) value;
+        } else if (clazz == Long.class || clazz == long.class) {
+            return "" + value;
+        } else {
             //bean对象
             return JSON.toJSONString(value);
         }
     }
 
-    private <T> T stringToBean(String str,Class<T> clazz) {
-        if(str == null || str.length() == 0 || clazz == null){
+    private <T> T stringToBean(String str, Class<T> clazz) {
+        if (str == null || str.length() == 0 || clazz == null) {
             return null;
         }
-        if(clazz == int.class || clazz == Integer.class){
-            return (T)Integer.valueOf(str);
-        }else if(clazz == String.class){
-            return (T)str;
-        }else if(clazz == Long.class || clazz == long.class){
+        if (clazz == int.class || clazz == Integer.class) {
+            return (T) Integer.valueOf(str);
+        } else if (clazz == String.class) {
+            return (T) str;
+        } else if (clazz == Long.class || clazz == long.class) {
             return (T) Long.valueOf(str);
-        }else {
+        } else {
             //bean对象
-            return JSON.toJavaObject(JSON.parseObject(str),clazz);
+            return JSON.toJavaObject(JSON.parseObject(str), clazz);
         }
     }
 
     private void returnToPool(Jedis jedis) {
-        if(jedis!=null){
+        if (jedis != null) {
             //返回数据库连接池
             jedis.close();
         }

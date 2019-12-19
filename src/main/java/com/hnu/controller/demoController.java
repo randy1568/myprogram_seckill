@@ -1,14 +1,17 @@
 package com.hnu.controller;
 
 import com.hnu.redis.RedisService;
+import com.hnu.redis.UserKey;
 import com.hnu.result.CodeMsg;
 import com.hnu.result.Result;
 import com.hnu.domain.User;
 import com.hnu.service.UserService;
+import com.hnu.vo.LoginVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
@@ -58,10 +61,16 @@ public class demoController {
     @RequestMapping("/redis/set")
     @ResponseBody
     public Result<Boolean> redisSet(){
-        boolean answer = redisService.set("key1", "hello,redis");
+        boolean answer = redisService.set(UserKey.getById,"key2", "hello,redis");
         return Result.success(answer);
     }
 
+    @RequestMapping("/redis/get")
+    @ResponseBody
+    public Result<String> redisGet(){
+        String answer = redisService.get(UserKey.getById,"key2",String.class);
+        return Result.success(answer);
+    }
 
 
 }
