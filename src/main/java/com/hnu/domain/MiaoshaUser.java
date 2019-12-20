@@ -60,4 +60,6 @@ public class MiaoshaUser {
     public void setLoginCount(Integer loginCount) {
         this.loginCount = loginCount;
     }
+
+
 }
