@@ -21,7 +21,7 @@ import javax.servlet.http.HttpServletResponse;
 public class UserArgumentResolvers implements HandlerMethodArgumentResolver {
 
     @Autowired
-    RedisService redisService;
+    MiaoshaUserService miaoshaUserService;
 
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
@@ -42,7 +42,8 @@ public class UserArgumentResolvers implements HandlerMethodArgumentResolver {
             return null;
         }
         String token = StringUtils.isEmpty(paraToken) ? cookieToken : paraToken;
-        return redisService.get(MiaoshaUserKey.getToken, token, MiaoshaUser.class);
+        //此处将更新token在redis里边的过期时间
+        return miaoshaUserService.geByToken(response,token);
 
     }
 

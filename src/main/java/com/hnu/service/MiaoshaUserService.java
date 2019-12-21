@@ -51,11 +51,9 @@ public class MiaoshaUserService {
         //登陆成功之后
         //生成token
         String token = UUIDUtil.uuid();
-        //存到缓存
-        redisService.set(MiaoshaUserKey.getToken,token,miaoshaUser);
 
-        //生成对应的Cookie
-        addCookie(token,response);
+        //生成对应的Cookie,
+        addCookie(token,miaoshaUser,response);
         return true;
     }
 
@@ -67,12 +65,16 @@ public class MiaoshaUserService {
         //这里是为了延长cookie（分布式sesseion）的有效时间，比如，每登陆一次，有效时间就成登陆那刻起，有30分钟
         if(user !=null){
             //得到的cookie有效才延长
-            addCookie(token,response);
+            addCookie(token,user, response);
         }
         return  user;
     }
 
-    public void addCookie(String token,HttpServletResponse response){
+    public void addCookie(String token,MiaoshaUser miaoshaUser, HttpServletResponse response){
+
+        //存到缓存
+        redisService.set(MiaoshaUserKey.getToken,token,miaoshaUser);
+
         Cookie cookie = new Cookie(COOKI_TOKEN_NAME,token);
         cookie.setMaxAge(MiaoshaUserKey.getToken.expireSeconds());
         cookie.setPath("/");
