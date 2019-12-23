@@ -65,6 +65,24 @@ public class RedisService {
         }
     }
 
+
+    /**
+     *s删除键值对
+     * @param keyPrefix
+     * @param key
+     * @return
+     */
+    public boolean delete(KeyPrefix keyPrefix,String key){
+        Jedis jedis = null;
+        try {
+            jedis = jp.getResource();
+            String real_key = keyPrefix.getPrefix()+key;
+            Long del = jedis.del(real_key);
+            return del > 0;
+        } finally {
+            jedis.close();
+        }
+    }
     /**
      * 增加键值
      * @param keyPrefix

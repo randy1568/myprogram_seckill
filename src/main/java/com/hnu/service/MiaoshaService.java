@@ -6,6 +6,7 @@ import com.hnu.domain.OrderInfo;
 import com.hnu.vo.goodsVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class MiaoshaService {
@@ -17,6 +18,7 @@ public class MiaoshaService {
     @Autowired
     OrderService orderService;
 
+    @Transactional
     public  OrderInfo miaosha(MiaoshaUser user, goodsVo goods) {
 
         //减库存

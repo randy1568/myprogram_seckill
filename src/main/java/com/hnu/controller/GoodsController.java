@@ -1,7 +1,7 @@
 package com.hnu.controller;
 
 import com.hnu.domain.MiaoshaUser;
-import com.hnu.domain.miaoshaGoods;
+import com.hnu.redis.GoodsKey;
 import com.hnu.redis.RedisService;
 import com.hnu.service.GoodsService;
 import com.hnu.service.MiaoshaUserService;
@@ -11,7 +11,12 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.thymeleaf.context.WebContext;
+import org.thymeleaf.spring5.view.ThymeleafViewResolver;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
 @Controller
@@ -26,6 +31,9 @@ public class GoodsController {
 
     @Autowired
     GoodsService goodsService;
+
+    @Autowired
+    ThymeleafViewResolver viewResolver;
 
     /**通过cookie从缓存里得到miaoshaUser，这样写不雅观，改成下面那种方式
      @RequestMapping("/to_list") public String list(Model model,HttpServletResponse response,
@@ -52,25 +60,50 @@ public class GoodsController {
      * @param user
      * @return
      */
-    @RequestMapping("/to_list")
-    public String list(Model model, MiaoshaUser user) {
+    @RequestMapping(value = "/to_list", produces = "text/html")
+    @ResponseBody
+    public String list(Model model, MiaoshaUser user, HttpServletRequest request, HttpServletResponse response) {
+
+        //1.取页面缓存   //因为对于任何客户只有一个list页面，所以这里的key“”。
+        String html = redisService.get(GoodsKey.getGoodsList, "", String.class);
+        if (html != null) {
+            return html;
+        }
 
         List<goodsVo> goodsList = goodsService.listGoodsVo();
         model.addAttribute("goodsList", goodsList);
         model.addAttribute("user", user);
 
-        return "goods_list";
+        WebContext context = new WebContext(request, response, request.getServletContext(), request.getLocale(), model.asMap());
+        //2.手动渲染
+        //第一个参数template为带渲染的视图名称
+        html = viewResolver.getTemplateEngine().process("goods_list", context);
+        //3.写进缓存
+        redisService.set(GoodsKey.getGoodsList, "", html);
+        return html;
+//       return "goods_list";
     }
 
-    @RequestMapping("/to_detail/{goodsId}")
-    public String detail(Model model, MiaoshaUser user, @PathVariable("goodsId") long goodsId) {
+    @RequestMapping(value = "/to_detail/{goodsId}", produces = "text/html")
+    @ResponseBody
+    public String detail(Model model, MiaoshaUser user, @PathVariable("goodsId") long goodsId,
+                         HttpServletResponse response, HttpServletRequest request) {
 
-        model.addAttribute("user",user);
+        //1.取页面缓存
+        String html = redisService.get(GoodsKey.getGoodsDetail, goodsId + "", String.class);
+        if (html != null) {
+            System.out.println(html);
+            return html;
+        }
+
+
+        model.addAttribute("user", user);
 
         goodsVo goods = goodsService.getGoodsVoByGoodsId(goodsId);
 
         //这些模型在detail.html会用到
-        model.addAttribute("goods",goods);
+        model.addAttribute("goods", goods);
+
 
         long startAt = goods.getStartDate().getTime();
         long endAt = goods.getEndDate().getTime();
@@ -92,6 +125,14 @@ public class GoodsController {
         model.addAttribute("miaoshaStatus", miaoshaStatus);
         model.addAttribute("remainSeconds", remianSeconds);
 
-        return "goods_detail";
+
+        WebContext context = new WebContext(request, response, request.getServletContext(), request.getLocale(), model.asMap());
+        //2.手动渲染
+        //第一个参数template为带渲染的视图名称
+        html = viewResolver.getTemplateEngine().process("goods_detail", context);
+        //3.写进缓存
+        redisService.set(GoodsKey.getGoodsDetail, goodsId + "", html);
+        return html;
+//        return "goods_detail";
     }
 }

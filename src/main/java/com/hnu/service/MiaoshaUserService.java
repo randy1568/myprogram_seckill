@@ -28,6 +28,44 @@ public class MiaoshaUserService {
 
     public static final String COOKI_TOKEN_NAME = "token" ;
 
+    public MiaoshaUser getById(long id){
+
+        //这里就是所谓的对象缓存。
+        MiaoshaUser user = redisService.get(MiaoshaUserKey.getById, id + "", MiaoshaUser.class);
+        if(user !=null){
+            return user;
+        }
+        //缓存没有就去数据库读
+        user =  miaoshaUserDao.getById(id);
+        //读出来再写进缓存
+        redisService.set(MiaoshaUserKey.getById,""+id,user);
+        return user;
+    }
+
+    //更新密码
+    public boolean updatePassword(String token, long id,String formPass){
+
+        MiaoshaUser user = this.getById(id);
+        if(user == null){
+            throw new GlobalException(CodeMsg.MOBILE_NOT_EXIST);
+        }
+
+        String salt = user.getSalt();
+        MiaoshaUser miaoshaUser = new MiaoshaUser();
+        miaoshaUser.setId(id);
+        miaoshaUser.setPassword(MD5Util.formPassToDBPass(formPass,salt));
+        miaoshaUserDao.update(miaoshaUser);
+        //此时需要把该用户在缓存里的数据进行更改,否则会出现缓存不一致的现象
+        //删除getById在缓存里设置的数据
+        redisService.delete(MiaoshaUserKey.getById,""+id);
+        redisService.set(MiaoshaUserKey.getById,id+"",miaoshaUser);
+        //修改Token对应的miaosha_user
+        redisService.set(MiaoshaUserKey.getToken,token,miaoshaUser);
+        return true;
+
+    }
+
+
     public boolean login(HttpServletResponse response, LoginVo loginVo) {
         if (loginVo == null) {
             throw  new GlobalException(CodeMsg.SERVER_ERROR);
@@ -36,7 +74,7 @@ public class MiaoshaUserService {
         String formPass = loginVo.getPassword();
 
         //判断手机号码是否存在
-        MiaoshaUser miaoshaUser = miaoshaUserDao.getById(Long.parseLong(mobile));
+        MiaoshaUser miaoshaUser = this.getById(Long.parseLong(mobile));
         if (miaoshaUser == null) {
             throw  new GlobalException(CodeMsg.MOBILE_NOT_EXIST);
         }

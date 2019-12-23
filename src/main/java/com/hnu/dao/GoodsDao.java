@@ -19,6 +19,7 @@ public interface GoodsDao {
     public goodsVo getGoodsVoByGoodsId(@Param("goodsId") long goodsId);
 
 
-    @Update("update  miaosh_goods set stock_count = stock_count-1 where goods_id = #{goodsId}")
+//    这里利用mysql自身带的锁，因为mysql会禁止同时两个请求操作同一个表数据。加了where stock_count>1就能防止出现超卖现象
+    @Update("update  miaosh_goods set stock_count = stock_count-1 where goods_id = #{goodsId} where stock_count>1")
     public int ReduceStock(miaoshaGoods goods);
 }
