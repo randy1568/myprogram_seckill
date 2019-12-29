@@ -63,11 +63,9 @@ public class MiaoshaController implements InitializingBean {
         }
         for (goodsVo vos:goodsVo){
             //以id+库存 存进redis
-            System.out.println("Count："+ vos.getStockCount());
             redisService.set(GoodsKey.getMiaoshaGoodsStock,""+vos.getId(),vos.getStockCount());
             map.put(vos.getId(),false);
         }
-        System.out.println("------------afterPropertiesSet---------");
     }
 
 
@@ -76,34 +74,25 @@ public class MiaoshaController implements InitializingBean {
 
         //用户未登陆，回到登陆界面
         if (user == null) {
-            System.out.println("---------1---------------");
             return "login";
         }
         //内存标记，减少之后的redis访问
         if (map.get(goodsId)){
             model.addAttribute("errmsg", CodeMsg.MIAO_SHA_OVER.getMsg());
-            System.out.println("---------2---------------");
             return "miaosha_fail";
         }
-//        try {
-//            System.in.read();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
 
         Long res = redisService.decr(GoodsKey.getMiaoshaGoodsStock, goodsId + "");
         if(res < 0){
             //没有库存
             map.put(goodsId,true);//内存标记
             model.addAttribute("errmsg", CodeMsg.MIAO_SHA_OVER.getMsg());
-            System.out.println("---------3---------------");
             return "miaosha_fail";
         }
         //判断是否重复秒杀
         MiaoshaOrder miaoshaOrder = orderService.getMiaoshaOrderByUserIdAndGoodsId(user.getId(), goodsId);
         if (miaoshaOrder != null) {
             model.addAttribute("errmsg", CodeMsg.REPEAT_MIAO_SHA.getMsg());
-            System.out.println("---------4---------------");
             return "miaosha_fail";
         }
         //入队
