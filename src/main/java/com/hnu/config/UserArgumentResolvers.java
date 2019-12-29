@@ -1,5 +1,6 @@
 package com.hnu.config;
 
+import com.hnu.access.UserContext;
 import com.hnu.domain.MiaoshaUser;
 import com.hnu.redis.MiaoshaUserKey;
 import com.hnu.redis.RedisService;
@@ -34,7 +35,7 @@ public class UserArgumentResolvers implements HandlerMethodArgumentResolver {
                                   NativeWebRequest webRequest, WebDataBinderFactory binderFactory) throws Exception {
         HttpServletRequest request = webRequest.getNativeRequest(HttpServletRequest.class);
         HttpServletResponse response = webRequest.getNativeResponse(HttpServletResponse.class);
-
+/**
         String paraToken = request.getParameter(MiaoshaUserService.COOKI_TOKEN_NAME);
         String cookieToken = getCookieToken(request, MiaoshaUserService.COOKI_TOKEN_NAME);
 
@@ -44,10 +45,12 @@ public class UserArgumentResolvers implements HandlerMethodArgumentResolver {
         String token = StringUtils.isEmpty(paraToken) ? cookieToken : paraToken;
         //此处将更新token在redis里边的过期时间
         return miaoshaUserService.geByToken(response,token);
+ **/
+     return UserContext.getUser();
 
     }
 
-    private String getCookieToken(HttpServletRequest request, String cookiTokenName) {
+/*    public static String getCookieToken(HttpServletRequest request, String cookiTokenName) {
         Cookie[] cookies =  request.getCookies();
 
         if(cookies == null || cookies.length == 0){
@@ -60,5 +63,5 @@ public class UserArgumentResolvers implements HandlerMethodArgumentResolver {
             }
         }
         return null;
-    }
+    } */
 }

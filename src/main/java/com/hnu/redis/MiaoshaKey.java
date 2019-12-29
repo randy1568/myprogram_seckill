@@ -7,4 +7,5 @@ public class MiaoshaKey extends BasePrefix {
     }
 
    public static MiaoshaKey goodsOver = new MiaoshaKey("go");
+   public static MiaoshaKey getMiaoshaPath = new MiaoshaKey("gMP");
 }

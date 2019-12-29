@@ -6,7 +6,10 @@ import com.hnu.domain.MiaoshaUser;
 import com.hnu.domain.OrderInfo;
 import com.hnu.redis.MiaoshaKey;
 import com.hnu.redis.RedisService;
+import com.hnu.util.MD5Util;
+import com.hnu.util.UUIDUtil;
 import com.hnu.vo.goodsVo;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -52,10 +55,26 @@ public class MiaoshaService {
 
     //
     private void setGoodsOver(long goodsId) {
-        redisService.set(MiaoshaKey.goodsOver,""+goodsId,true);
+        redisService.set(MiaoshaKey.goodsOver, "" + goodsId, true);
     }
 
     private boolean getGoodsOver(long goodsId) {
-        return redisService.exists(MiaoshaKey.goodsOver,""+goodsId);
+        return redisService.exists(MiaoshaKey.goodsOver, "" + goodsId);
+    }
+
+    //生成唯一的path
+    public String createMiaoshaPath(MiaoshaUser user, long goodsId) {
+        String str = MD5Util.md5(UUIDUtil.uuid() + "123456");
+        redisService.set(MiaoshaKey.getMiaoshaPath, user.getId() + "_" + goodsId, str);
+        return str;
+    }
+
+    //检查URL传过来的path
+    public boolean checkPath(MiaoshaUser user, long goodsId, String path) {
+        if(user == null || StringUtils.isEmpty(path)){
+            return false;
+        }
+        String oldPath = redisService.get(MiaoshaKey.getMiaoshaPath, user.getId() + "_" + goodsId, String.class);
+        return path.equals(oldPath);
     }
 }
