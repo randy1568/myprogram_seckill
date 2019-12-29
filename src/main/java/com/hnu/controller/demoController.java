@@ -1,5 +1,6 @@
 package com.hnu.controller;
 
+import com.hnu.rabbitMq.MQSender;
 import com.hnu.redis.RedisService;
 import com.hnu.redis.UserKey;
 import com.hnu.result.CodeMsg;
@@ -70,6 +71,16 @@ public class demoController {
     public Result<String> redisGet(){
         String answer = redisService.get(UserKey.getById,"key2",String.class);
         return Result.success(answer);
+    }
+
+    @Autowired
+    MQSender mqSender;
+
+    @RequestMapping("/mq")
+    @ResponseBody
+    public Result<String> testMQ(){
+        mqSender.send("hello seckillMQ");
+        return new Result<>("successful MQ");
     }
 
 

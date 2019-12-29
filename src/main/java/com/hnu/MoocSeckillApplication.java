@@ -1,18 +1,20 @@
 package com.hnu;
 
-import com.hnu.dao.UserDao;
-import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-
-import java.util.concurrent.locks.AbstractQueuedSynchronizer;
+import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 
 @SpringBootApplication
-public class MoocSeckillApplication {
+public class MoocSeckillApplication extends SpringBootServletInitializer {
 
-	public static void main(String[] args) {
-		SpringApplication.run(MoocSeckillApplication.class, args);
+    public static void main(String[] args) {
+        SpringApplication.run(MoocSeckillApplication.class, args);
 
-	}
+    }
 
+    @Override
+    protected SpringApplicationBuilder configure(SpringApplicationBuilder builder) {
+        return builder.sources(MoocSeckillApplication.class);
+    }
 }

@@ -26,7 +26,11 @@ public class CodeMsg {
     //秒杀模块 5005XX
     public static CodeMsg MIAO_SHA_OVER = new CodeMsg(500500, "库存已空，秒杀结束");
     public static CodeMsg REPEAT_MIAO_SHA = new CodeMsg(500501, "重复秒杀");
+   // public static CodeMsg NO_MORE_GOODS = new CodeMsg(500501, "没有库存");
+
     //对BIND_ERROR做参数封装
+
+
     public CodeMsg fillArgs(Object... args){
         int code =this.code;
         String message = String.format(this.msg,args);

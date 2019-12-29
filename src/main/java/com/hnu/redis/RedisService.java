@@ -93,7 +93,7 @@ public class RedisService {
         Jedis jedis = null;
         try {
             jedis = jp.getResource();
-            String real_key = keyPrefix +key;
+            String real_key = keyPrefix.getPrefix() +key;
              return jedis.incr(real_key);
         } finally {
             jedis.close();
@@ -110,14 +110,14 @@ public class RedisService {
         Jedis jedis = null;
         try {
             jedis = jp.getResource();
-            String real_key = keyPrefix +key;
+            String real_key = keyPrefix.getPrefix() +key;
             return jedis.decr(real_key);
         } finally {
             jedis.close();
         }
     }
 
-    private <T> String beanToString(T value) {
+    public   <T> String beanToString(T value) {
         if (value == null) {
             return null;
         }
@@ -134,7 +134,7 @@ public class RedisService {
         }
     }
 
-    private <T> T stringToBean(String str, Class<T> clazz) {
+    public    <T> T stringToBean(String str, Class<T> clazz) {
         if (str == null || str.length() == 0 || clazz == null) {
             return null;
         }

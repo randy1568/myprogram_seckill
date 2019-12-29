@@ -41,14 +41,16 @@ public class OrderService {
         orderInfo.setGoodsPrice(goods.getGoodsPrice());
         orderInfo.setStatus(0); //'订单状态:0,新建未支付,1已支付,2已发货,3已收货,4已退款,5,已完成',
         orderInfo.setOrderChannel(1);
-        long orderId =   orderDao.insert(orderInfo);
-
+        orderDao.insert(orderInfo);
+        //视频说是mybatis会把生成的id赋值给orderinfo
+         System.out.println("-------------------hahah----: "+orderInfo.getId());
 
         MiaoshaOrder miaoshaOrder = new MiaoshaOrder();
         miaoshaOrder.setGoodsId(goods.getId());
-        miaoshaOrder.setOrderId(orderId);
+        miaoshaOrder.setOrderId(orderInfo.getId());
         miaoshaOrder.setUserId(user.getId());
         orderDao.insertMiaoshaOreder(miaoshaOrder);
+
 
         //对应上边的redis里边的 get
         redisService.set(OrderKey.getMiaoshaOrderByUserIdAndGoodsId,""+user.getId()+goods.getId(),miaoshaOrder);

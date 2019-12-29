@@ -25,9 +25,10 @@ public class GoodsService {
     }
 
     //减秒杀商品表的库存
-    public void ReduceStock(goodsVo goods) {
+    public boolean ReduceStock(goodsVo goods) {
         miaoshaGoods miaoshaGoods = new miaoshaGoods();
         miaoshaGoods.setGoodsId(goods.getId());
-        goodsDao.ReduceStock(miaoshaGoods);
+        int res = goodsDao.ReduceStock(miaoshaGoods);
+        return res>0;
     }
 }
